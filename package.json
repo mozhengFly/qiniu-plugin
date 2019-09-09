@@ -24,5 +24,11 @@
   "dependencies": {
     "qiniu": "^7.2.2",
     "single-line-log": "^1.1.2"
-  }
+  },
+  "files": [
+    "index.js",
+    "lib",
+    "LICENSE",
+    "README.md"
+  ]
 }
