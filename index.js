@@ -27,6 +27,7 @@ class Qiniu {
         this.error = option.error || (() => {
         });
         this.init();
+        this.FileUtil = FileUtil
         return this;
     }
 
