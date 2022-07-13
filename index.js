@@ -109,13 +109,14 @@ class Qiniu {
     confirm(callback) {
         process.stdin.setEncoding('utf8');
         Message.info(`Use accessKey[${qiniu.conf.ACCESS_KEY}] and secretKey[${qiniu.conf.SECRET_KEY}] to upload files`);
-        Message.warning(`Please confirm upload info：`);
-        Message.info(`---Qiniu bucket：${this.bucket}`);
-        Message.info(`---Qiniu space directory：${this.remotePath}`);
-        Message.info(`---Local file directory：${this.localFileDirectory}`);
-        let fileInfo = this.fileList.map((file, index) => (`File ${index} path is : > ${file['localFilePath']}`)).join('\n');
-        Message.info(`---The files which will be uploading is as follows：\n${fileInfo}`);
-        Message.warning(`Are you sure you want to start uploading (N/y)?`);
+        Message.warning(`Please confirm upload info : `);
+        Message.info(`[Qiniu bucket        ] : ${this.bucket}`);
+        Message.info(`[Qiniu remote path   ] : ${this.remotePath}`);
+        Message.info(`[Local file directory] : ${this.localFileDirectory}`);
+        Message.warning(`The files which will be uploading is as follows : `);
+        let fileInfo = this.fileList.map((file, index) => (`File ${index} Path >> ${file['localFilePath']}`)).join('\n');
+        Message.info(fileInfo);
+        Message.warning(`Are you sure you want to start uploading (Y/N)?`);
         process.stdin.on('data', (input) => {
             input = input.toString().trim();
             if (['Y', 'y', 'YES', 'yes'].indexOf(input) > -1) {
