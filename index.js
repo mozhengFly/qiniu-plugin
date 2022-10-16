@@ -182,12 +182,16 @@ class Qiniu {
                     this.confirm(() => {
                         this.uploadFileDirectoryWithoutConfirm().then(() => {
                             resolve();
+                        }).catch(e => {
+                            reject(e)
                         })
                     })
                 } else {
                     this.uploadFileDirectoryWithoutConfirm().then(() => {
                         resolve();
-                    });
+                    }).catch(e => {
+                        reject(e)
+                    })
                 }
             } catch (e) {
                 reject(e)
@@ -230,6 +234,7 @@ class Qiniu {
                                 let errorInfo = this.errorFiles.map(file => (`File【${file['localFilePath']}】upload failed! `)).join('\n');
                                 Message.error(errorInfo);
                                 this.error(this.errorFiles)
+                                return reject(errorInfo);
                             } else {
                                 this.success(this.uploadFiles)
                             }
