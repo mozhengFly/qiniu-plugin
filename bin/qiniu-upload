@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+const version = require('../package.json').version;
+const program = require('commander');
+const Qiniu = require('../index.js');
+
+program
+    .name('qiniu-upload')
+    .description('Upload files to Qiniu Cloud. Example: qiniu-upload -a accessKey -s secretKey -b bucket -r remotePath -l dist')
+    .version(version)
+    .requiredOption('-a, --access-key <char>', 'Qiniu Cloud access key')
+    .requiredOption('-s, --secret-key <char>', 'Qiniu Cloud secret key')
+    .requiredOption('-b, --bucket <char>', 'Qiniu Cloud bucket')
+    .requiredOption('-r, --remote-path <char>', 'Qiniu Cloud remote path')
+    .requiredOption('-l, --local-file-directory <char>', 'The directory which need to upload to Qiniu Cloud. notice: need relative path!')
+    .option('-n, --needConfirm', 'Whether to confirm before uploading', false)
+    .action((options) => {
+        new Qiniu(options).asyncUpload().then(() => {
+            console.log(1)
+        });
+    });
+
+program.parse();

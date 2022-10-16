@@ -11,6 +11,7 @@ class Qiniu {
      * @param option
      */
     constructor(option) {
+        this.option = option;
         qiniu.conf.ACCESS_KEY = option['accessKey'];
         qiniu.conf.SECRET_KEY = option['secretKey'];
         this.bucket = option.bucket;
@@ -21,14 +22,40 @@ class Qiniu {
         this.uploadFiles = [];
         this.errorFiles = [];
         this.uploading = false;
-        this.needConfirm = !!option.needConfirm;
+        if (option.needConfirm) {
+            this.needConfirm = option.needConfirm === true || option.needConfirm === 'true';
+        } else {
+            this.needConfirm = false;
+        }
+        // this.needConfirm = !!option.needConfirm;
         this.success = option.success || (() => {
         });
         this.error = option.error || (() => {
         });
         this.init();
-        this.FileUtil = FileUtil
         return this;
+    }
+
+    /**
+     * 校验参数
+     * @returns {boolean}
+     */
+    validOption() {
+        if (!this.option.accessKey) {
+            throw new Error('accessKey is Required!')
+        }
+        if (!this.option.secretKey) {
+            throw new Error('secretKey is Required!')
+        }
+        if (!this.option.bucket) {
+            throw new Error('bucket is Required!')
+        }
+        if (!this.option.remotePath) {
+            throw new Error('remotePath is Required!')
+        }
+        if (!this.option.localFileDirectory) {
+            throw new Error('localFileDirectory is Required!')
+        }
     }
 
     /**
@@ -131,58 +158,89 @@ class Qiniu {
      * upload
      */
     upload() {
+        this.validOption()
         if (this.needConfirm) {
             this.confirm(() => {
-                this.uploadFileDirectoryWithoutConfirm(() => {
+                this.uploadFileDirectoryWithoutConfirm().then(() => {
                     process.exit();
                 })
             })
         } else {
-            this.uploadFileDirectoryWithoutConfirm()
+            this.uploadFileDirectoryWithoutConfirm().then();
         }
     }
 
     /**
-     * upload without confirm
-     * @param callback
+     * 异步上传
+     * @returns {Promise<unknown>}
      */
-    uploadFileDirectoryWithoutConfirm(callback) {
-        if (!this.fileList.length) {
-            Message.warning('can not find any file to upload...');
-            return
-        }
-        Message.info('begin to upload...');
-        let progressBar = new ProgressBar('UploadProgress', this.fileList.length);
-        this.uploading = true;
-        this.fileList.map(file => {
-            let localFilePath = file['localFilePath'];
-            if (this.remotePath) {
-                file.remoteUrl = this.remotePath + localFilePath.toString().slice(this.localFileDirectory.length);
-            } else {
-                file.remoteUrl = localFilePath.toString().slice(this.localFileDirectory.length + 1);
-            }
-            file.token = this.getToken(file.remoteUrl);
-            this.uploadFile(file, (error, response) => {
-                if (error) {
-                    this.errorFiles.push(file);
+    asyncUpload() {
+        return new Promise((resolve, reject) => {
+            try {
+                this.validOption()
+                if (this.needConfirm) {
+                    this.confirm(() => {
+                        this.uploadFileDirectoryWithoutConfirm().then(() => {
+                            resolve();
+                        })
+                    })
                 } else {
-                    file.url = response['key'];
+                    this.uploadFileDirectoryWithoutConfirm().then(() => {
+                        resolve();
+                    });
                 }
-                this.uploadFiles.push(file);
-                progressBar.render(this.uploadFiles.length);
-                if (this.uploadFiles.length === this.fileList.length) {
-                    Message.info('upload successful！');
-                    if (this.errorFiles.length) {
-                        let errorInfo = this.errorFiles.map(file => (`file【${file['localFilePath']}】upload failed! `)).join('\n');
-                        Message.error(errorInfo);
-                        this.error(this.errorFiles)
+            } catch (e) {
+                reject(e)
+            }
+        })
+    }
+
+    /**
+     * upload without confirm
+     */
+    uploadFileDirectoryWithoutConfirm() {
+        return new Promise((resolve, reject) => {
+            if (!this.fileList.length) {
+                Message.warning('can not find any file to upload...');
+                return resolve();
+            }
+            try {
+                Message.info('begin to upload...');
+                let progressBar = new ProgressBar('UploadProgress', this.fileList.length);
+                this.uploading = true;
+                this.fileList.map(file => {
+                    let localFilePath = file['localFilePath'];
+                    if (this.remotePath) {
+                        file.remoteUrl = this.remotePath + localFilePath.toString().slice(this.localFileDirectory.length);
                     } else {
-                        this.success(this.uploadFiles)
+                        file.remoteUrl = localFilePath.toString().slice(this.localFileDirectory.length + 1);
                     }
-                    this.uploading = false;
-                    callback && callback()
-                }
-            })
+                    file.token = this.getToken(file.remoteUrl);
+                    this.uploadFile(file, (error, response) => {
+                        if (error) {
+                            this.errorFiles.push(file);
+                        } else {
+                            file.url = response['key'];
+                        }
+                        this.uploadFiles.push(file);
+                        progressBar.render(this.uploadFiles.length);
+                        if (this.uploadFiles.length === this.fileList.length) {
+                            Message.info('All files have been uploaded !');
+                            if (this.errorFiles.length) {
+                                let errorInfo = this.errorFiles.map(file => (`File【${file['localFilePath']}】upload failed! `)).join('\n');
+                                Message.error(errorInfo);
+                                this.error(this.errorFiles)
+                            } else {
+                                this.success(this.uploadFiles)
+                            }
+                            this.uploading = false;
+                            return resolve();
+                        }
+                    })
+                })
+            } catch (e) {
+                reject(e)
+            }
         })
     }
 

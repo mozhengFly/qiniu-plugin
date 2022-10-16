@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/mozhengFly/qiniu-plugin#readme",
   "dependencies": {
+    "commander": "^9.4.1",
     "qiniu": "^7.2.2",
     "single-line-log": "^1.1.2"
   },
@@ -30,5 +31,8 @@
     "lib",
     "LICENSE",
     "README.md"
-  ]
+  ],
+  "bin": {
+    "qiniu-upload": "bin/qiniu-upload"
+  }
 }
