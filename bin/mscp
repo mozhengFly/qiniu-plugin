@@ -1,0 +1,74 @@
+#!/usr/bin/env node
+const version = require('../package.json').version;
+const program = require('commander');
+const { NodeSSH } = require('node-ssh');
+const ssh = new NodeSSH();
+
+function parseRemote (remote) {
+    if (Object.prototype.toString.call(remote) === '[object String]') {
+        // username:password@host:/path/to
+        const regex = /^([a-zA-Z0-9\-\.]+)(\:.*)?@([^:]+):([^:]+:)?(.*)?$/;
+        const m = remote.match(regex);
+        if (!m) return {};
+        const ret = {
+            username: m[1],
+            host: m[3],
+        };
+        if (m[2]) {
+            ret.password = m[2].slice(1);
+        }
+        if (m.length===6 && m[4]) {
+            ret.port = m[4].slice(0,-1);
+        }
+        if (m.length===6 && m[5]) {
+            ret.path = m[5];
+        } else if (m.length===5 && m[4]) {
+            ret.path = m[4];
+        }
+        return ret;
+    }
+    return remote;
+}
+
+async function connect(remoteConfig) {
+    await ssh.connect({
+        host: remoteConfig.host,
+        username: remoteConfig.username,
+        password: remoteConfig.password
+    })
+    console.log('SSH login success');
+}
+
+async function putFile(localFile, remoteFile) {
+    // 上传网站的发布包至configs中配置的远程服务器的指定地址
+    try {
+        await ssh.putFile(localFile, remoteFile, null, {
+            step: (total_transferred, chunk, total) => {
+                console.log('Uploaded', total_transferred, 'of', total);
+            }
+        });
+        console.log('The file is upload successful');
+    } catch (e) {
+        console.log('the file upload fail:', e);
+        process.exit(0);
+    }
+}
+
+program
+    .name('mscp')
+    .version(version)
+    .description('Example: mscp <localFile> user:password@ip:path ; mscp -d <localFile> user:password@ip:path')
+    .option('-d, --directory', 'If localFile is directory, then need add -d')
+    .argument('<localFile>', 'Local File')
+    .argument('<remote>', 'Remote Server')
+    .description('Scp File To Remote Server...')
+    .action(async (localFile, remote, options) => {
+        console.log('localFile:', localFile, remote, options);
+        const remoteConfig = parseRemote(remote);
+        console.log('parseRemote:', remoteConfig);
+        await connect(remoteConfig);
+        await putFile(localFile, remoteConfig.path);
+        process.exit(0);
+    });
+
+program.parse();

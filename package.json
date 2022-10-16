@@ -1,6 +1,6 @@
 {
   "name": "mo-qiniu",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A plugin for qiniu storage",
   "main": "index.js",
   "scripts": {
@@ -33,6 +33,11 @@
     "README.md"
   ],
   "bin": {
-    "qiniu-upload": "bin/qiniu-upload"
+    "qiniu-upload": "bin/qiniu-upload",
+    "mscp": "bin/mscp",
+    "mlink": "bin/mlink"
+  },
+  "devDependencies": {
+    "node-ssh": "^13.0.0"
   }
 }
