@@ -5,7 +5,7 @@ const Qiniu = require('../index.js');
 
 program
     .name('qiniu-upload')
-    .description('Upload files to Qiniu Cloud. Example: qiniu-upload -a accessKey -s secretKey -b bucket -r remotePath -l dist')
+    .description('Upload files to Qiniu Cloud. ')
     .version(version)
     .requiredOption('-a, --access-key <char>', 'Qiniu Cloud access key')
     .requiredOption('-s, --secret-key <char>', 'Qiniu Cloud secret key')
@@ -18,5 +18,9 @@ program
             console.log('upload files to qiniu cloud finished ! ')
         });
     });
+	
+program.addHelpText('after', `
+Example:
+  $ qiniu-upload -a accessKey -s secretKey -b bucket -r remotePath -l dist`);
 
 program.parse();
